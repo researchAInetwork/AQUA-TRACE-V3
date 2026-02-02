@@ -41,6 +41,7 @@ export interface AnalysisReport {
   confidencePercentage: number;
   confidenceLevel: ConfidenceLevel;
   assessmentLimitations: string[];
+  sourceMode?: 'Live' | 'Demo';
 }
 
 export interface GroundingSource {
@@ -54,4 +55,5 @@ export interface AnalysisState {
   resources: string | null;
   sources: GroundingSource[];
   error: string | null;
+  mode: 'Live' | 'Demo';
 }

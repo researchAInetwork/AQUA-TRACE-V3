@@ -49,15 +49,15 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
       activeSourceRef.current = source;
       source.start();
       setIsPlaying(true);
-    } catch (err) {
-      console.error("Audio synthesis unavailable.");
+    } catch (err: any) {
+      alert(err.message || "Audio briefing unavailable in current mode.");
     } finally {
       setIsAudioLoading(false);
     }
   };
 
   const handleDownload = () => {
-    const text = `AQUA-TRACE ENVIRONMENTAL AUDIT\nAIS SCORE: ${report.aquaImpactScore}/100\nSEVERITY: ${report.environmentalRiskLevel}\nDIRECTIVE: ${report.actionIntelligence.recommendedAction}\n\nOPTICAL DIAGNOSTICS:\n- ${report.detectedOptics.join('\n- ')}\n\nACTION PLAN:\n${report.actionIntelligence.labValidationAdvisory}`;
+    const text = `AQUA-TRACE ENVIRONMENTAL AUDIT\nMODE: ${report.sourceMode || 'Unknown'}\nAIS SCORE: ${report.aquaImpactScore}/100\nSEVERITY: ${report.environmentalRiskLevel}\nDIRECTIVE: ${report.actionIntelligence.recommendedAction}\n\nOPTICAL DIAGNOSTICS:\n- ${report.detectedOptics.join('\n- ')}\n\nACTION PLAN:\n${report.actionIntelligence.labValidationAdvisory}`;
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -70,6 +70,19 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in-up pb-20">
       
+      {/* Demonstration Mode Banner */}
+      {report.sourceMode === 'Demo' && (
+        <div className="bg-blue-600/10 border border-blue-500/30 rounded-xl p-4 flex items-center gap-4 animate-pulse">
+           <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+             <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+           </div>
+           <div className="space-y-1">
+             <p className="text-xs font-black text-blue-400 uppercase tracking-widest">Demonstration Analysis</p>
+             <p className="text-[10px] text-slate-400 font-medium">Live API quota exhausted or unavailable. Displaying pre-generated Gemini 3 impact intelligence for field reference.</p>
+           </div>
+        </div>
+      )}
+
       {/* Summary Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-8">
         <div className="space-y-2">

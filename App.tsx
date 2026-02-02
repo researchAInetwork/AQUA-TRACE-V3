@@ -18,6 +18,7 @@ function App() {
     resources: null,
     sources: [],
     error: null,
+    mode: 'Live'
   });
   const [isDragging, setIsDragging] = useState(false);
   const [inputMode, setInputMode] = useState<InputMode>('upload');
@@ -40,7 +41,7 @@ function App() {
 
     setFile(selectedFile);
     setPreview(URL.createObjectURL(selectedFile));
-    setAnalysisState({ status: 'idle', data: null, resources: null, sources: [], error: null });
+    setAnalysisState({ status: 'idle', data: null, resources: null, sources: [], error: null, mode: 'Live' });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +79,8 @@ function App() {
         data: result.report, 
         sources: result.sources,
         resources: null,
-        error: null 
+        error: null,
+        mode: result.mode
       });
     } catch (err: any) {
       setAnalysisState(prev => ({ 
@@ -94,7 +96,7 @@ function App() {
     setFile(null);
     setPreview(null);
     setContext('');
-    setAnalysisState({ status: 'idle', data: null, resources: null, sources: [], error: null });
+    setAnalysisState({ status: 'idle', data: null, resources: null, sources: [], error: null, mode: 'Live' });
   };
 
   const isVideo = file?.type.startsWith('video/');
@@ -281,11 +283,13 @@ function App() {
       <footer className="h-10 shrink-0 bg-slate-950 border-t border-slate-900 px-6 flex items-center justify-between text-[10px] text-slate-500 font-mono z-50">
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
-            <span className="tracking-widest font-black uppercase">Sensor_Online</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${analysisState.mode === 'Live' ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-blue-500 shadow-[0_0_6px_#3b82f6] animate-pulse'}`}></span>
+            <span className="tracking-widest font-black uppercase">{analysisState.mode === 'Live' ? 'Mode: Live' : 'Mode: Demo'}</span>
           </div>
           <span className="opacity-20">|</span>
-          <span className="hidden sm:inline tracking-tighter uppercase opacity-60">Neural_Engine: G3_Multimodal</span>
+          <span className="hidden sm:inline tracking-tighter uppercase opacity-60">
+            {analysisState.mode === 'Live' ? 'Neural_Engine: G3_Multimodal' : 'Cached_Inference: G3_Multimodal'}
+          </span>
         </div>
         
         <div className="hidden lg:block text-center font-sans font-bold opacity-30 tracking-[0.15em] uppercase px-10 truncate">
