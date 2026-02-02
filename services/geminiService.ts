@@ -1,11 +1,14 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel } from "../types";
+import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel, TimeSensitivity } from "../types";
 
 const MOCK_REPORTS: AnalysisReport[] = [
   {
     detectedOptics: ["Iridescent hydrocarbon sheen", "Surface film stratification"],
     nonDetectableOptics: ["Dissolved benzene", "PAHs", "Heavy metals"],
     aquaImpactScore: 78,
+    comparativeIntelligence: "AIS 78 — Higher impact than approximately 92% of comparable surface water observations.",
+    timeSensitivity: TimeSensitivity.IMMEDIATE_VERIFICATION,
+    plainLanguageSummary: "This analysis indicates a high likelihood of active oil-based pollution that poses an immediate threat to the local ecosystem and potentially human health.",
     scoreBreakdown: {
       opticalSeverity: 32,
       visibleArea: 14,
@@ -33,6 +36,9 @@ const MOCK_REPORTS: AnalysisReport[] = [
     detectedOptics: ["Cyan-green surface accumulation", "High turbidity", "Organic foaming"],
     nonDetectableOptics: ["Microcystins", "Dissolved phosphorus", "Nitrates"],
     aquaImpactScore: 62,
+    comparativeIntelligence: "AIS 62 — Higher impact than approximately 74% of comparable surface water observations.",
+    timeSensitivity: TimeSensitivity.MONITOR_CLOSELY,
+    plainLanguageSummary: "A dense algal bloom is present, which may lead to oxygen depletion and potential toxin release if it continues to spread.",
     scoreBreakdown: {
       opticalSeverity: 22,
       visibleArea: 18,
@@ -129,15 +135,20 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
       YOUR ANALYSIS MUST INCLUDE:
       1. **AQUA-IMPACT SCORE™ (AIS)**: A standardized 0–100 score. 
          Formula components: Severity (0-40), Visible Area (0-20), Ecosystem Sensitivity (0-20), Human Risk (0-20).
-      2. **Optical Diagnostics**: Explicitly separate what IS visibly detected vs. what is INVISIBLE but suspected.
-      3. **Action Intelligence**: Clear directives (Monitor/Escalate/Contain).
-      4. **Biological Reasoning**: Quantitative estimation of ecological stress.
+      2. **Comparative Intelligence**: A qualitative global contextual comparison like: "AIS [Score] — Higher impact than approximately [Y]% of comparable surface water observations."
+      3. **Time Sensitivity**: One of: "Non-Urgent", "Monitor Closely", "Time-Critical", "Immediate Verification Recommended".
+      4. **Plain Language Summary**: A single, concise, non-technical summary sentence for non-experts.
+      5. **Optical Diagnostics**: Explicitly separate what IS visibly detected vs. what is INVISIBLE but suspected.
+      6. **Action Intelligence**: Clear directives (Monitor/Escalate/Contain) aligned with urgency.
 
       OUTPUT FORMAT: Strictly valid JSON.
       {
-        "detectedOptics": ["e.g., Iridescent oil sheen", "High turbidity"],
-        "nonDetectableOptics": ["e.g., Heavy metals", "PFAS", "Dissolved nitrates"],
+        "detectedOptics": ["e.g., Iridescent oil sheen"],
+        "nonDetectableOptics": ["e.g., Heavy metals"],
         "aquaImpactScore": number,
+        "comparativeIntelligence": "string",
+        "timeSensitivity": "Non-Urgent" | "Monitor Closely" | "Time-Critical" | "Immediate Verification Recommended",
+        "plainLanguageSummary": "string",
         "scoreBreakdown": {
           "opticalSeverity": number,
           "visibleArea": number,
@@ -199,7 +210,6 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
 
   } catch (error: any) {
     console.warn("Live API inference unavailable. Activating Demonstration Fallback Mode.", error);
-    // Select a mock report based on a simple hash of the filename to maintain some consistency
     const index = file.name.length % MOCK_REPORTS.length;
     return { 
       report: MOCK_REPORTS[index], 
@@ -218,11 +228,10 @@ export async function generateAudioReport(report: AnalysisReport): Promise<strin
     const prompt = `
       AQUA-TRACE Command Briefing:
       Impact Analysis complete. AIS Score: ${report.aquaImpactScore}/100.
-      Classification: ${report.likelyPollutionCategory}.
-      Severity: ${report.environmentalRiskLevel}.
+      Urgency Level: ${report.timeSensitivity}.
+      Executive Summary: ${report.plainLanguageSummary}.
       Recommended Action: ${report.actionIntelligence.recommendedAction}.
-      Briefly explain the risk: ${report.riskJustification}.
-      Field Officer Directive: ${report.actionIntelligence.labValidationAdvisory}.
+      Field Directive: ${report.actionIntelligence.labValidationAdvisory}.
     `;
 
     const response = await ai.models.generateContent({
@@ -242,7 +251,6 @@ export async function generateAudioReport(report: AnalysisReport): Promise<strin
     if (!base64Audio) throw new Error("Audio synthesis failed.");
     return base64Audio;
   } catch {
-    // Return empty string or handle fallback if audio fails
     throw new Error("Audio Briefing currently unavailable.");
   }
 }

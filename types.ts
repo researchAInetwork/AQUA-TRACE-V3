@@ -6,6 +6,13 @@ export enum RiskLevel {
   UNKNOWN = 'Unknown'
 }
 
+export enum TimeSensitivity {
+  NON_URGENT = 'Non-Urgent',
+  MONITOR_CLOSELY = 'Monitor Closely',
+  TIME_CRITICAL = 'Time-Critical',
+  IMMEDIATE_VERIFICATION = 'Immediate Verification Recommended'
+}
+
 export enum ConfidenceLevel {
   LOW = 'Low',
   MODERATE = 'Moderate',
@@ -30,6 +37,9 @@ export interface AnalysisReport {
   detectedOptics: string[];
   nonDetectableOptics: string[];
   aquaImpactScore: number;
+  comparativeIntelligence: string;
+  timeSensitivity: TimeSensitivity;
+  plainLanguageSummary: string;
   scoreBreakdown: ScoreBreakdown;
   scoreExplanation: string;
   likelyPollutionCategory: string;
