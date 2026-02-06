@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { decodeBase64, decodeAudioData } from '../services/geminiService';
 
@@ -51,10 +52,13 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
   const micStreamRef = useRef<MediaStream | null>(null);
   const frameIntervalRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const internalVideoRef = useRef<HTMLVideoElement | null>(null);
   const isSendingFrameRef = useRef<boolean>(false);
 
   useEffect(() => {
-    return () => stopSession();
+    return () => {
+      stopSession();
+    };
   }, []);
 
   const toggleAssistant = () => {
@@ -67,7 +71,7 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
 
   const startSession = async () => {
     if (!navigator.onLine) {
-      alert("System Offline: Radio link could not be established.");
+      alert("FIELD ALERT: Network connectivity lost. Satellite uplink unavailable.");
       return;
     }
 
@@ -82,21 +86,17 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
       audioContextOutRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
 
       const systemInstructions = agentType === 'OPTIC' 
-        ? `SYSTEM: AQUA-OPTIC (Optical Sentinel Node).
-           FUNCTION: Real-time computer vision guide for field scouts.
-           GOALS: 
-           1. Monitor visual telemetry and guide operator on lens stabilization.
-           2. Call out visible sheens, foam, or discoloration patterns.
-           3. Be high-speed, technical, and brief.
-           VOICE: Professional, focused, alert.`
-        : `SYSTEM: AQUA-LOGIC (Forensic Analysis Oracle).
-           FUNCTION: Data interpretation and strategic briefing.
-           GOALS:
-           1. Analyze the provided AIS (AQUA Impact Score) data.
-           2. Explain ecological risk rationales and legal implications.
-           3. Discuss remediation strategies (Booms, sorbents, chemical neutralizers).
-           CONTEXT: ${reportContext || 'Forensic Review Mode'}.
-           VOICE: Academic, authoritative, analytical.`;
+        ? `ROLE: AQUA-OPTIC (Forensic Vision Node).
+           PROTOCOL: High-speed real-time computer vision analysis.
+           TASK: Monitor the incoming video stream. Identify sheens (hydrocarbons), algal blooms, or turbidity anomalies.
+           GUIDANCE: Instruct the user on camera positioning, focus, and stabilization. Call out detected optical signatures immediately.
+           TONE: Professional, technical, field-ready.`
+        : `ROLE: AQUA-LOGIC (Strategic Environmental Oracle).
+           PROTOCOL: Forensic interpretation and remediation strategy.
+           TASK: Analyze the current AIS (AQUA Impact Score) data and environmental report provided in context.
+           GUIDANCE: Explain the 'Why' behind the risk level. Discuss chemical pathways and specific remediation tactics like containment booms or sorbent deployment.
+           CONTEXT: ${reportContext || 'General Field Triage'}.
+           TONE: Authoritative, analytical, expert.`;
 
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
@@ -105,9 +105,11 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
             setIsActive(true);
             setIsConnecting(false);
             
+            // 1. Setup Microphone Input
             if (audioContextInRef.current) {
-              const source = audioContextInRef.current.createMediaStreamSource(stream);
-              const scriptProcessor = audioContextInRef.current.createScriptProcessor(4096, 1, 1);
+              const audioCtx = audioContextInRef.current;
+              const source = audioCtx.createMediaStreamSource(stream);
+              const scriptProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
               scriptProcessor.onaudioprocess = (e) => {
                 const inputData = e.inputBuffer.getChannelData(0);
                 const int16 = new Int16Array(inputData.length);
@@ -121,26 +123,29 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
                 sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob })).catch(() => {});
               };
               source.connect(scriptProcessor);
-              scriptProcessor.connect(audioContextInRef.current.destination);
+              scriptProcessor.connect(audioCtx.destination);
             }
 
+            // 2. Setup Video Telemetry (OPTIC Agent only)
             if (videoStream && agentType === 'OPTIC') {
-              const videoElement = document.createElement('video');
-              videoElement.srcObject = videoStream;
-              videoElement.muted = true;
-              videoElement.playsInline = true;
-              videoElement.play().catch(e => console.warn("Lens warning:", e));
+              const v = document.createElement('video');
+              v.srcObject = videoStream;
+              v.muted = true;
+              v.playsInline = true;
+              v.play().catch(() => {});
+              internalVideoRef.current = v;
 
               if (!canvasRef.current) canvasRef.current = document.createElement('canvas');
               const canvas = canvasRef.current;
               const ctx = canvas.getContext('2d');
 
+              // Stream frames at 1Hz for balanced telemetry and API efficiency
               frameIntervalRef.current = window.setInterval(async () => {
-                if (ctx && videoElement.readyState >= 2 && !isSendingFrameRef.current) {
+                if (ctx && v.readyState >= 2 && !isSendingFrameRef.current) {
                   isSendingFrameRef.current = true;
-                  canvas.width = 320;
-                  canvas.height = 180; 
-                  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                  canvas.width = 480; // Higher fidelity for pollution forensic
+                  canvas.height = 270; 
+                  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
                   canvas.toBlob(async (blob) => {
                     if (blob) {
                       try {
@@ -153,9 +158,9 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
                     } else {
                       isSendingFrameRef.current = false;
                     }
-                  }, 'image/jpeg', 0.5); 
+                  }, 'image/jpeg', 0.6); 
                 }
-              }, 2000); 
+              }, 1000); 
             }
           },
           onmessage: async (message: LiveServerMessage) => {
@@ -167,7 +172,9 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
               const source = ctx.createBufferSource();
               source.buffer = buffer;
               source.connect(ctx.destination);
-              source.onended = () => sourcesRef.current.delete(source);
+              source.onended = () => {
+                sourcesRef.current.delete(source);
+              };
               source.start(nextStartTimeRef.current);
               nextStartTimeRef.current += buffer.duration;
               sourcesRef.current.add(source);
@@ -180,7 +187,10 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
             }
           },
           onclose: () => stopSession(),
-          onerror: () => stopSession()
+          onerror: (e) => {
+            console.error("Link Interrupted:", e);
+            stopSession();
+          }
         },
         config: {
           responseModalities: [Modality.AUDIO],
@@ -205,32 +215,42 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
   const stopSession = () => {
     setIsActive(false);
     setIsConnecting(false);
+    
     if (sessionPromiseRef.current) {
       sessionPromiseRef.current.then(s => { try { s.close(); } catch (e) {} }).catch(() => {});
       sessionPromiseRef.current = null;
     }
+    
     if (micStreamRef.current) {
       micStreamRef.current.getTracks().forEach(track => track.stop());
       micStreamRef.current = null;
     }
+
+    if (internalVideoRef.current) {
+      internalVideoRef.current.srcObject = null;
+      internalVideoRef.current = null;
+    }
+
     if (frameIntervalRef.current) {
       clearInterval(frameIntervalRef.current);
       frameIntervalRef.current = null;
     }
+
     if (audioContextInRef.current) {
       audioContextInRef.current.close().catch(() => {});
       audioContextInRef.current = null;
     }
+
     if (audioContextOutRef.current) {
       audioContextOutRef.current.close().catch(() => {});
       audioContextOutRef.current = null;
     }
+
     sourcesRef.current.forEach(s => { try { s.stop(); } catch (e) {} });
     sourcesRef.current.clear();
     isSendingFrameRef.current = false;
   };
 
-  // Agent Specific Styling
   const themeColor = agentType === 'OPTIC' ? 'cyan' : 'indigo';
   const label = agentType === 'OPTIC' ? 'AQUA-OPTIC' : 'AQUA-LOGIC';
   const sublabel = agentType === 'OPTIC' ? 'SENTINEL' : 'ORACLE';
@@ -242,14 +262,14 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
         disabled={isConnecting}
         className={`flex items-center gap-3 px-4 py-2 rounded-xl border transition-all duration-300 ${
           isActive 
-            ? `bg-${themeColor}-600 border-${themeColor}-400 text-white shadow-[0_0_15px_rgba(8,145,178,0.5)]` 
-            : 'bg-black/80 border-white/10 text-white/50 hover:border-white/20'
+            ? `bg-${themeColor}-600 border-${themeColor}-400 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)]` 
+            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
         }`}
       >
-        <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white shadow-[0_0_8px_white]' : isConnecting ? `bg-${themeColor}-400 animate-pulse` : 'bg-white/20'}`}></div>
+        <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : isConnecting ? `bg-${themeColor}-400 animate-pulse` : 'bg-slate-800'}`}></div>
         <div className="flex flex-col items-start leading-none gap-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.15em]">{label}</span>
-          <span className={`text-[7px] font-bold uppercase tracking-widest text-${themeColor}-400`}>{sublabel} LINK</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
+          <span className={`text-[7px] font-bold uppercase tracking-widest ${isActive ? 'text-white/80' : `text-${themeColor}-500`}`}>{isActive ? 'LIVE LINK' : 'NEURAL CONNECT'}</span>
         </div>
       </button>
     );
@@ -259,20 +279,20 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
     <button 
       onClick={toggleAssistant}
       disabled={isConnecting}
-      className={`group relative h-10 px-5 rounded-xl flex items-center gap-3 transition-all duration-300 ${
+      className={`group relative h-10 px-6 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
         isActive 
-          ? `bg-${themeColor}-600 text-white shadow-lg border border-${themeColor}-400` 
-          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+          ? `bg-${themeColor}-600 text-white shadow-lg border-${themeColor}-400` 
+          : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white hover:border-slate-700'
       }`}
     >
       {isConnecting ? (
-        <div className={`w-4 h-4 border-2 border-slate-600 border-t-${themeColor}-400 rounded-full animate-spin`}></div>
+        <div className={`w-4 h-4 border-2 border-slate-700 border-t-${themeColor}-400 rounded-full animate-spin`}></div>
       ) : (
         <div className="flex items-center gap-3">
-          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_8px_white]' : 'bg-slate-700'}`}></div>
+          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : 'bg-slate-800'}`}></div>
           <div className="flex flex-col items-start leading-none">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em]">{label}</span>
-            <span className="text-[7px] font-mono opacity-50 uppercase tracking-widest">{isActive ? 'Active Relay' : 'Neural Link'}</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.25em]">{label}</span>
+            <span className={`text-[7px] font-mono uppercase tracking-widest ${isActive ? 'text-white/70' : 'text-slate-600'}`}>{isActive ? 'Active Telemetry' : 'Standby'}</span>
           </div>
         </div>
       )}
