@@ -3,63 +3,81 @@ import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel, TimeSensit
 
 const MOCK_REPORTS: AnalysisReport[] = [
   {
-    detectedOptics: ["Iridescent hydrocarbon sheen", "Surface film stratification"],
-    nonDetectableOptics: ["Dissolved benzene", "PAHs", "Heavy metals"],
+    detectedOptics: ["Iridescent hydrocarbon sheen", "Surface film stratification", "Dark plume at discharge point"],
+    nonDetectableOptics: ["Dissolved benzene/toluene", "Polycyclic Aromatic Hydrocarbons (PAHs)", "Heavy metals (Lead/Mercury)"],
     aquaImpactScore: 78,
     comparativeIntelligence: "AIS 78 — Higher impact than approximately 92% of comparable surface water observations.",
     timeSensitivity: TimeSensitivity.IMMEDIATE_VERIFICATION,
-    plainLanguageSummary: "This analysis indicates a high likelihood of active oil-based pollution that poses an immediate threat to the local ecosystem and potentially human health.",
+    plainLanguageSummary: "High-probability hydrocarbon discharge detected. Immediate intervention is required to prevent localized ecological collapse and contamination of downstream water intakes.",
     scoreBreakdown: {
       opticalSeverity: 32,
       visibleArea: 14,
       ecosystemSensitivity: 18,
       humanProximity: 14
     },
-    scoreExplanation: "High-severity hydrocarbon signature detected. The iridescence indicates a fresh release of light refined oils, posing immediate toxicological risk to surface-dwelling organisms.",
+    scoreExplanation: "Iridescence and plume thickness suggest a fresh release of light refined oils (likely Diesel or Hydraulic fluid). The stratification indicates high spread potential across the water-air interface.",
     likelyPollutionCategory: "Petrochemical Discharge",
-    environmentalImpactExplanation: "Oil films prevent gas exchange at the air-water interface, leading to localized hypoxia and direct physical coating of aquatic flora and fauna.",
-    humanHealthImplications: "Potential VOC inhalation risk and water supply contamination if near intake points.",
+    environmentalImpactExplanation: "Oil films prevent atmospheric gas exchange, causing rapid hypoxia for benthic and pelagic organisms. Direct physical coating of avian species is a critical risk.",
+    humanHealthImplications: "High VOC inhalation risk for responders. Potential groundwater leaching if shoreline is permeable.",
     environmentalRiskLevel: RiskLevel.HIGH,
-    riskJustification: "Optical signatures match light refined oils with high spread rate and low viscosity.",
+    riskJustification: "The classification is driven by the presence of a continuous 'rainbow' and 'silver' sheen pattern which correlates with a spill thickness of 0.3μm to 5.0μm. The proximity to sensitive wetlands increases the risk of irreversible soil saturation.",
     actionIntelligence: {
       recommendedAction: "Escalate",
-      notificationTargets: ["Coast Guard", "EPA Emergency Response", "Local Water Board"],
-      followUpEvidence: ["Upstream drainage photos", "Odor verification", "Water sample in amber glass"],
-      labValidationAdvisory: "TPH (Total Petroleum Hydrocarbons) and BTEX analysis highly recommended."
+      notificationTargets: ["Coast Guard Sector Command", "Regional EPA Emergency Response", "Downstream Municipal Intakes"],
+      followUpEvidence: [
+        "Upstream forensic photo-documentation of storm drains within 2km.",
+        "Shoreline oiling intensity mapping (SCAT method).",
+        "Verification of 'rainbow' vs 'silver' sheen thickness using standard thickness charts."
+      ],
+      labValidationAdvisory: "Request EPA Method 1664 (Oil & Grease) and EPA Method 8260 (VOC/BTEX). Use amber glass jars for sampling; zero headspace.",
+      remediationStrategy: [
+        "Deploy 500ft of containment boom downstream to capture surface sheens.",
+        "Utilize hydrophobic sorbent pads for immediate spot recovery.",
+        "Implement air-sparging or surface agitation if oxygen levels drop below 4mg/L."
+      ]
     },
     confidencePercentage: 92,
     confidenceLevel: ConfidenceLevel.HIGH,
-    assessmentLimitations: ["Film thickness cannot be calculated via 2D imagery", "Sub-surface plume extent unknown"],
+    assessmentLimitations: ["Sub-surface plume mass cannot be quantified via optics", "Specific hydrocarbon molecular weight requires chromatography"],
     sourceMode: 'Demo'
   },
   {
-    detectedOptics: ["Cyan-green surface accumulation", "High turbidity", "Organic foaming"],
-    nonDetectableOptics: ["Microcystins", "Dissolved phosphorus", "Nitrates"],
+    detectedOptics: ["Cyan-green surface accumulation", "High turbidity (Organic)", "Biological foaming"],
+    nonDetectableOptics: ["Microcystins (Toxins)", "Dissolved Phosphorus", "Ammonia/Nitrate concentrations"],
     aquaImpactScore: 62,
     comparativeIntelligence: "AIS 62 — Higher impact than approximately 74% of comparable surface water observations.",
     timeSensitivity: TimeSensitivity.MONITOR_CLOSELY,
-    plainLanguageSummary: "A dense algal bloom is present, which may lead to oxygen depletion and potential toxin release if it continues to spread.",
+    plainLanguageSummary: "Dense algal accumulation consistent with a bloom event. While likely organic, potential toxin production requires immediate monitoring and contact advisory.",
     scoreBreakdown: {
       opticalSeverity: 22,
       visibleArea: 18,
       ecosystemSensitivity: 12,
       humanProximity: 10
     },
-    scoreExplanation: "Moderate-high risk due to visible eutrophication. The presence of dense algal mats indicates nutrient loading, likely from agricultural runoff.",
+    scoreExplanation: "Dense cyanobacterial-like mats detected. Coloration suggests high chlorophyll-a and phycocyanin content, indicative of significant nutrient loading (eutrophication).",
     likelyPollutionCategory: "Harmful Algal Bloom (HAB)",
-    environmentalImpactExplanation: "Algal decomposition consumes dissolved oxygen, creating 'dead zones'. Some species may release cyanotoxins.",
-    humanHealthImplications: "Dermal irritation upon contact; neurotoxin risk if ingested by pets or humans.",
+    environmentalImpactExplanation: "Nighttime respiratory demand by the bloom can cause lethal dissolved oxygen swings. Potential for neurotoxin and hepatotoxin release.",
+    humanHealthImplications: "Dermal irritation (rashes) and respiratory distress from aerosolized toxins. Lethal to pets and local fauna if ingested.",
     environmentalRiskLevel: RiskLevel.MODERATE,
-    riskJustification: "Coloration and texture are consistent with Microcystis or similar cyanobacteria blooms.",
+    riskJustification: "The visual appearance matches 'spilled paint' signatures typical of Cyanobacteria. Risk is set to Moderate pending toxicity results as visual density does not always correlate with toxin parts-per-billion.",
     actionIntelligence: {
       recommendedAction: "Monitor",
-      notificationTargets: ["Department of Health", "Local Environment NGO"],
-      followUpEvidence: ["Multiple site photos over 48 hours", "Dissolved oxygen readings"],
-      labValidationAdvisory: "ELISA testing for microcystin concentrations is advised."
+      notificationTargets: ["State Department of Health", "Local Parks and Recreation", "Environmental NGO Monitoring Network"],
+      followUpEvidence: [
+        "Daily Secchi disk depth readings to track bloom density.",
+        "Visual check for dead fish or lethargic waterfowl on shorelines.",
+        "Microscopic identification of dominant species (e.g., Microcystis vs Anabaena)."
+      ],
+      labValidationAdvisory: "Immediate ELISA testing for Microcystin and Anatoxin-a. Measure Chlorophyll-a and Total Phosphorus concentrations.",
+      remediationStrategy: [
+        "Post 'No Contact' and 'Pet Danger' advisory signage immediately.",
+        "Coordinate with upstream agriculture to pause fertilizer applications during peak flow.",
+        "Evaluate ultrasonic treatment or nutrient-binding agents (Phoslock) for small impoundments."
+      ]
     },
     confidencePercentage: 85,
     confidenceLevel: ConfidenceLevel.HIGH,
-    assessmentLimitations: ["Species identification requires microscopy", "Toxicity cannot be confirmed visually"],
+    assessmentLimitations: ["Toxicity level is independent of visual density", "Specific species identification requires lab microscopy"],
     sourceMode: 'Demo'
   }
 ];
@@ -117,44 +135,47 @@ async function getGeoLocation(): Promise<{ latitude: number; longitude: number }
   }
 }
 
-export async function analyzeWaterImage(file: File, context: string): Promise<{ report: AnalysisReport; sources: GroundingSource[]; mode: 'Live' | 'Demo' }> {
+export async function analyzeWaterImage(file: File, context: string, granularity: 'Standard' | 'Expert'): Promise<{ report: AnalysisReport; sources: GroundingSource[]; mode: 'Live' | 'Demo' }> {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const base64Data = await fileToBase64(file);
     const mimeType = file.type;
     const location = await getGeoLocation();
 
+    const isExpert = granularity === 'Expert';
+
     const prompt = `
       Act as a World-Class Environmental Systems Architect and Forensic Scientist. 
       Perform a production-grade environmental intelligence audit of this surface water sample.
+
+      ANALYSIS MODE: ${granularity}
+      ${isExpert ? 'FOCUS: Deep forensic reasoning, chemical pathway analysis, and high-granularity remediation tactics.' : 'FOCUS: Rapid field triage, clear summaries, and standard safety protocols.'}
 
       CONTEXTUAL GUIDANCE:
       ${context ? `Site Metadata: ${context}` : 'No metadata provided.'}
       Geolocation: ${location ? `Lat ${location.latitude}, Lng ${location.longitude}` : 'Unknown.'}
 
-      YOUR ANALYSIS MUST INCLUDE:
-      1. **AQUA-IMPACT SCORE™ (AIS)**: A standardized 0–100 score. 
-         Formula components: Severity (0-40), Visible Area (0-20), Ecosystem Sensitivity (0-20), Human Risk (0-20).
-      2. **Comparative Intelligence**: A qualitative global contextual comparison like: "AIS [Score] — Higher impact than approximately [Y]% of comparable surface water observations."
-      3. **Time Sensitivity**: One of: "Non-Urgent", "Monitor Closely", "Time-Critical", "Immediate Verification Recommended".
-      4. **Plain Language Summary**: A single, concise, non-technical summary sentence for non-experts.
-      5. **Optical Diagnostics**: Explicitly separate what IS visibly detected vs. what is INVISIBLE but suspected.
-      6. **Action Intelligence**: Clear directives (Monitor/Escalate/Contain) aligned with urgency.
+      CRITICAL REQUIREMENT:
+      You must provide a detailed 'riskJustification' that explains EXACTLY why the Risk Level was chosen. 
+      ${isExpert ? 'In Expert Mode, use technical terminology related to ecological toxicity and pollutant dispersion.' : 'In Standard Mode, keep it concise but evidence-based.'}
+
+      YOUR ANALYSIS MUST INCLUDE ENHANCED DECISION INTELLIGENCE:
+      1. **AQUA-IMPACT SCORE™ (AIS)**: Standardized 0–100 score.
+      2. **Action Intelligence Panel Enhancements**:
+         - **Follow-Up Evidence**: Provide 3+ highly specific field observations.
+         - **Lab Validation Advisory**: Name specific EPA/International test methods.
+         - **Remediation Strategy**: Provide 3+ immediate field solutions.
+      3. **Plain Language Summary**: A clear sentence for non-experts.
 
       OUTPUT FORMAT: Strictly valid JSON.
       {
-        "detectedOptics": ["e.g., Iridescent oil sheen"],
-        "nonDetectableOptics": ["e.g., Heavy metals"],
+        "detectedOptics": ["string"],
+        "nonDetectableOptics": ["string"],
         "aquaImpactScore": number,
         "comparativeIntelligence": "string",
         "timeSensitivity": "Non-Urgent" | "Monitor Closely" | "Time-Critical" | "Immediate Verification Recommended",
         "plainLanguageSummary": "string",
-        "scoreBreakdown": {
-          "opticalSeverity": number,
-          "visibleArea": number,
-          "ecosystemSensitivity": number,
-          "humanProximity": number
-        },
+        "scoreBreakdown": { "opticalSeverity": number, "visibleArea": number, "ecosystemSensitivity": number, "humanProximity": number },
         "scoreExplanation": "string",
         "likelyPollutionCategory": "string",
         "environmentalImpactExplanation": "string",
@@ -165,13 +186,26 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
           "recommendedAction": "Monitor" | "Escalate" | "Contain",
           "notificationTargets": ["string"],
           "followUpEvidence": ["string"],
-          "labValidationAdvisory": "string"
+          "labValidationAdvisory": "string",
+          "remediationStrategy": ["string"]
         },
         "confidencePercentage": number,
         "confidenceLevel": "Low" | "Moderate" | "High",
         "assessmentLimitations": ["string"]
       }
     `;
+
+    const config: any = {
+      tools: [{ googleSearch: {} }, { googleMaps: {} }]
+    };
+
+    if (location) {
+      config.toolConfig = {
+        retrievalConfig: {
+          latLng: { latitude: location.latitude, longitude: location.longitude }
+        }
+      };
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -181,16 +215,7 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
           { text: prompt }
         ]
       },
-      config: {
-        tools: [{ googleSearch: {} }, { googleMaps: {} }],
-        ...(location && {
-          toolConfig: {
-            retrievalConfig: {
-              latLng: { latitude: location.latitude, longitude: location.longitude }
-            }
-          }
-        })
-      }
+      config: config
     });
 
     const text = response.text || '';
@@ -209,13 +234,12 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
     return { report, sources, mode: 'Live' };
 
   } catch (error: any) {
-    console.warn("Live API inference unavailable. Activating Demonstration Fallback Mode.", error);
+    console.warn("Live API inference unavailable. Fallback activated.", error);
     const index = file.name.length % MOCK_REPORTS.length;
     return { 
       report: MOCK_REPORTS[index], 
       sources: [
-        { title: "Standard Environmental Risk Procedures", uri: "https://www.epa.gov/environmental-topics" },
-        { title: "Surface Water Monitoring Guidelines", uri: "https://www.who.int/publications/i/item/9789241562010" }
+        { title: "Standard Environmental Risk Procedures", uri: "https://www.epa.gov/environmental-topics" }
       ],
       mode: 'Demo' 
     };
@@ -226,12 +250,11 @@ export async function generateAudioReport(report: AnalysisReport): Promise<strin
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = `
-      AQUA-TRACE Command Briefing:
-      Impact Analysis complete. AIS Score: ${report.aquaImpactScore}/100.
-      Urgency Level: ${report.timeSensitivity}.
-      Executive Summary: ${report.plainLanguageSummary}.
-      Recommended Action: ${report.actionIntelligence.recommendedAction}.
-      Field Directive: ${report.actionIntelligence.labValidationAdvisory}.
+      AQUA-TRACE Executive Briefing:
+      Impact Score: ${report.aquaImpactScore}. Urgency: ${report.timeSensitivity}.
+      Summary: ${report.plainLanguageSummary}.
+      Action Required: ${report.actionIntelligence.recommendedAction}.
+      Risk Rationale: ${report.riskJustification}.
     `;
 
     const response = await ai.models.generateContent({

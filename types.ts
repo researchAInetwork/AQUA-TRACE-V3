@@ -31,6 +31,7 @@ export interface ActionIntelligence {
   notificationTargets: string[];
   followUpEvidence: string[];
   labValidationAdvisory: string;
+  remediationStrategy: string[];
 }
 
 export interface AnalysisReport {
