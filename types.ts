@@ -1,3 +1,4 @@
+
 export enum RiskLevel {
   LOW = 'Low',
   MODERATE = 'Moderate',
@@ -51,7 +52,9 @@ export interface AnalysisReport {
   actionIntelligence: ActionIntelligence;
   confidencePercentage: number;
   confidenceLevel: ConfidenceLevel;
+  confidenceFactors: string[];
   assessmentLimitations: string[];
+  systemAdvisory: string;
   sourceMode?: 'Live' | 'Demo';
 }
 
