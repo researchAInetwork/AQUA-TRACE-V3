@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel, TimeSensitivity } from "../types";
 
@@ -45,47 +44,6 @@ const MOCK_REPORTS: AnalysisReport[] = [
     assessmentLimitations: ["Sub-surface mass cannot be quantified via optics", "Molecular weight requires laboratory chromatography"],
     systemAdvisory: SYSTEM_DISCLAIMER,
     sourceMode: 'Demo'
-  },
-  {
-    detectedOptics: ["Cyan-green surface accumulation", "High turbidity (Organic)", "Biological foaming"],
-    nonDetectableOptics: ["Microcystins (Toxins)", "Dissolved Phosphorus", "Ammonia/Nitrate concentrations"],
-    aquaImpactScore: 62,
-    comparativeIntelligence: "AIS 62 indicates higher projected impact than approximately 74% of comparable surface-water observations.",
-    timeSensitivity: TimeSensitivity.MONITOR_CLOSELY,
-    plainLanguageSummary: "Dense algal accumulation consistent with a bloom event. While likely organic, potential toxin production may exist and requires monitoring.",
-    scoreBreakdown: {
-      opticalSeverity: 22,
-      visibleArea: 18,
-      ecosystemSensitivity: 12,
-      humanProximity: 10
-    },
-    scoreExplanation: "Observed surface patterns are indicative of Cyanobacteria. Visual density suggests significant nutrient loading, though toxicity is not visually verifiable.",
-    likelyPollutionCategory: "Harmful Algal Bloom (HAB) (Potential)",
-    environmentalImpactExplanation: "Respiratory demand of the bloom may cause dissolved oxygen fluctuations. Some species in this category are capable of toxin production.",
-    humanHealthImplications: "Possible dermal irritation. Direct contact should be avoided until toxin presence is evaluated.",
-    environmentalRiskLevel: RiskLevel.MODERATE,
-    riskJustification: "The visual appearance matches 'spilled paint' signatures typical of Cyanobacteria. Risk is set to Moderate pending toxicity results.",
-    actionIntelligence: {
-      recommendedAction: "Monitor",
-      notificationTargets: ["State Department of Health", "Local Parks and Recreation", "Environmental NGO Monitoring Network"],
-      followUpEvidence: [
-        "Daily Secchi disk depth readings to track bloom density.",
-        "Visual survey for stressed or lethargic wildlife.",
-        "Microscopic identification of dominant species."
-      ],
-      labValidationAdvisory: "ELISA testing for Microcystin and Anatoxin-a is suggested to determine health risks.",
-      remediationStrategy: [
-        "Posting of advisory signage is suggested as a precautionary measure.",
-        "Paused upstream nutrient applications may be evaluated.",
-        "Ultrasonic treatment could be considered for enclosed impoundments."
-      ]
-    },
-    confidencePercentage: 85,
-    confidenceLevel: ConfidenceLevel.HIGH,
-    confidenceFactors: ["Characteristic color profile", "Turbidity markers", "Regional seasonality correlation"],
-    assessmentLimitations: ["Toxicity level is independent of visual density", "Specific species identification requires lab microscopy"],
-    systemAdvisory: SYSTEM_DISCLAIMER,
-    sourceMode: 'Demo'
   }
 ];
 
@@ -130,25 +88,11 @@ export const decodeAudioData = async (
   return buffer;
 };
 
-async function getGeoLocation(): Promise<{ latitude: number; longitude: number } | null> {
-  if (!navigator.geolocation) return null;
-  try {
-    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-    });
-    return { latitude: position.coords.latitude, longitude: position.coords.longitude };
-  } catch {
-    return null;
-  }
-}
-
 export async function analyzeWaterImage(file: File, context: string, granularity: 'Standard' | 'Expert'): Promise<{ report: AnalysisReport; sources: GroundingSource[]; mode: 'Live' | 'Demo' }> {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const base64Data = await fileToBase64(file);
     const mimeType = file.type;
-    const location = await getGeoLocation();
-
     const isExpert = granularity === 'Expert';
 
     const prompt = `
@@ -160,55 +104,15 @@ export async function analyzeWaterImage(file: File, context: string, granularity
 
       ENVIRONMENTAL CONTEXT:
       ${context ? `Site Metadata: ${context}` : 'No metadata provided.'}
-      Geolocation: ${location ? `Lat ${location.latitude}, Lng ${location.longitude}` : 'Unknown.'}
 
       PROMPT PROTOCOL:
       - Use conditional language ("may indicate", "suggests", "possible").
       - Prioritize risk prioritization over definitive diagnosis.
       - Explicitly state that visual evidence requires laboratory confirmation.
-
-      OUTPUT JSON STRUCTURE:
-      {
-        "detectedOptics": ["string"],
-        "nonDetectableOptics": ["string"],
-        "aquaImpactScore": number (0-100),
-        "comparativeIntelligence": "AIS [Score] indicates higher projected impact than [X]% of comparable observations.",
-        "timeSensitivity": "Non-Urgent" | "Monitor Closely" | "Time-Critical" | "Immediate Verification Recommended",
-        "plainLanguageSummary": "1-2 sentence non-technical summary avoiding jargon and absolute certainty.",
-        "scoreBreakdown": { "opticalSeverity": number, "visibleArea": number, "ecosystemSensitivity": number, "humanProximity": number },
-        "scoreExplanation": "Technical rationale for scores.",
-        "likelyPollutionCategory": "Inferred category with qualifiers like '(Potential)'.",
-        "environmentalImpactExplanation": "Conditional ecological risks.",
-        "humanHealthImplications": "Precautions for contact and inhalation.",
-        "environmentalRiskLevel": "Low" | "Moderate" | "High" | "Critical",
-        "riskJustification": "Clear evidence-based rationale for the risk level.",
-        "actionIntelligence": {
-          "recommendedAction": "Monitor" | "Escalate" | "Contain",
-          "notificationTargets": ["string"],
-          "followUpEvidence": ["string"],
-          "labValidationAdvisory": "Suggested lab methods (EPA/ISO).",
-          "remediationStrategy": ["Suggested field actions in conditional phrasing."]
-        },
-        "confidencePercentage": number,
-        "confidenceLevel": "Low" | "Moderate" | "High",
-        "confidenceFactors": ["Factors influencing this assessment (clarity, source visibility, context)."],
-        "assessmentLimitations": ["Specific optical or contextual constraints."],
-        "systemAdvisory": "${SYSTEM_DISCLAIMER}"
-      }
     `;
 
-    const config: any = {
-      tools: [{ googleSearch: {} }, { googleMaps: {} }]
-    };
-
-    if (location) {
-      config.toolConfig = {
-        retrievalConfig: {
-          latLng: { latitude: location.latitude, longitude: location.longitude }
-        }
-      };
-    }
-
+    // Using gemini-3-pro-preview for advanced multimodal reasoning with search grounding.
+    // We use responseSchema for structured output when combined with googleSearch.
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: {
@@ -217,13 +121,54 @@ export async function analyzeWaterImage(file: File, context: string, granularity
           { text: prompt }
         ]
       },
-      config: config
+      config: {
+        tools: [{ googleSearch: {} }],
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            detectedOptics: { type: Type.ARRAY, items: { type: Type.STRING } },
+            nonDetectableOptics: { type: Type.ARRAY, items: { type: Type.STRING } },
+            aquaImpactScore: { type: Type.NUMBER },
+            comparativeIntelligence: { type: Type.STRING },
+            timeSensitivity: { type: Type.STRING },
+            plainLanguageSummary: { type: Type.STRING },
+            scoreBreakdown: {
+              type: Type.OBJECT,
+              properties: {
+                opticalSeverity: { type: Type.NUMBER },
+                visibleArea: { type: Type.NUMBER },
+                ecosystemSensitivity: { type: Type.NUMBER },
+                humanProximity: { type: Type.NUMBER }
+              }
+            },
+            scoreExplanation: { type: Type.STRING },
+            likelyPollutionCategory: { type: Type.STRING },
+            environmentalImpactExplanation: { type: Type.STRING },
+            humanHealthImplications: { type: Type.STRING },
+            environmentalRiskLevel: { type: Type.STRING },
+            riskJustification: { type: Type.STRING },
+            actionIntelligence: {
+              type: Type.OBJECT,
+              properties: {
+                recommendedAction: { type: Type.STRING },
+                notificationTargets: { type: Type.ARRAY, items: { type: Type.STRING } },
+                followUpEvidence: { type: Type.ARRAY, items: { type: Type.STRING } },
+                labValidationAdvisory: { type: Type.STRING },
+                remediationStrategy: { type: Type.ARRAY, items: { type: Type.STRING } }
+              }
+            },
+            confidencePercentage: { type: Type.NUMBER },
+            confidenceLevel: { type: Type.STRING },
+            confidenceFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
+            assessmentLimitations: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        }
+      }
     });
 
     const text = response.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Scientific synthesis failed.");
-    const report: AnalysisReport = JSON.parse(jsonMatch[0]);
+    const report: AnalysisReport = JSON.parse(text);
     report.sourceMode = 'Live';
     report.systemAdvisory = SYSTEM_DISCLAIMER;
     
@@ -231,13 +176,12 @@ export async function analyzeWaterImage(file: File, context: string, granularity
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     for (const chunk of groundingChunks) {
       if (chunk.web) sources.push({ title: chunk.web.title, uri: chunk.web.uri });
-      else if (chunk.maps) sources.push({ title: chunk.maps.title, uri: chunk.maps.uri });
     }
 
     return { report, sources, mode: 'Live' };
 
   } catch (error: any) {
-    console.warn("Live API unavailable. Falling back to cached intelligence.", error);
+    console.warn("Live API unavailable or synthesis failed. Falling back to cached intelligence.", error);
     const index = Math.abs(file.name.length) % MOCK_REPORTS.length;
     return { 
       report: MOCK_REPORTS[index], 

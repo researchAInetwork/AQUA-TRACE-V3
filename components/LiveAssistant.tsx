@@ -1,7 +1,6 @@
-
-import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
-import { decodeBase64, decodeAudioData } from '../services/geminiService';
+import React, { useEffect, useRef, useState } from 'react';
+import { decodeAudioData, decodeBase64 } from '../services/geminiService';
 
 const encode = (bytes: Uint8Array) => {
   let binary = '';
@@ -94,7 +93,7 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
         : `ROLE: AQUA-LOGIC (Strategic Environmental Oracle).
            PROTOCOL: Forensic interpretation and remediation strategy.
            TASK: Analyze the current AIS (AQUA Impact Score) data and environmental report provided in context.
-           GUIDANCE: Explain the 'Why' behind the risk level. Discuss chemical pathways and specific remediation tactics like containment booms or sorbent deployment.
+           GUIDANCE: Explain the 'Why' behind the risk level. Discuss chemical pathways and specific remediation tactics.
            CONTEXT: ${reportContext || 'General Field Triage'}.
            TONE: Authoritative, analytical, expert.`;
 
@@ -139,11 +138,10 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
               const canvas = canvasRef.current;
               const ctx = canvas.getContext('2d');
 
-              // Stream frames at 1Hz for balanced telemetry and API efficiency
               frameIntervalRef.current = window.setInterval(async () => {
                 if (ctx && v.readyState >= 2 && !isSendingFrameRef.current) {
                   isSendingFrameRef.current = true;
-                  canvas.width = 480; // Higher fidelity for pollution forensic
+                  canvas.width = 480; 
                   canvas.height = 270; 
                   ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
                   canvas.toBlob(async (blob) => {
@@ -196,9 +194,7 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
           responseModalities: [Modality.AUDIO],
           speechConfig: { 
             voiceConfig: { 
-              prebuiltVoiceConfig: { 
-                voiceName: agentType === 'OPTIC' ? 'Zephyr' : 'Kore' 
-              } 
+              voiceName: agentType === 'OPTIC' ? 'Zephyr' : 'Kore' 
             } 
           },
           systemInstruction: systemInstructions,
@@ -253,27 +249,34 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
 
   const themeColor = agentType === 'OPTIC' ? 'cyan' : 'indigo';
   const label = agentType === 'OPTIC' ? 'AQUA-OPTIC' : 'AQUA-LOGIC';
-  const sublabel = agentType === 'OPTIC' ? 'SENTINEL' : 'ORACLE';
 
   if (isMinimal) {
+    const activeClass = themeColor === 'cyan' 
+      ? 'bg-cyan-600 border-cyan-400 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)]'
+      : 'bg-indigo-600 border-indigo-400 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]';
+
     return (
       <button 
         onClick={toggleAssistant}
         disabled={isConnecting}
         className={`flex items-center gap-3 px-4 py-2 rounded-xl border transition-all duration-300 ${
           isActive 
-            ? `bg-${themeColor}-600 border-${themeColor}-400 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)]` 
+            ? activeClass 
             : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
         }`}
       >
-        <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : isConnecting ? `bg-${themeColor}-400 animate-pulse` : 'bg-slate-800'}`}></div>
+        <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : isConnecting ? 'bg-slate-500 animate-pulse' : 'bg-slate-800'}`}></div>
         <div className="flex flex-col items-start leading-none gap-1">
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
-          <span className={`text-[7px] font-bold uppercase tracking-widest ${isActive ? 'text-white/80' : `text-${themeColor}-500`}`}>{isActive ? 'LIVE LINK' : 'NEURAL CONNECT'}</span>
+          <span className={`text-[7px] font-bold uppercase tracking-widest ${isActive ? 'text-white/80' : 'text-slate-500'}`}>{isActive ? 'LIVE LINK' : 'NEURAL CONNECT'}</span>
         </div>
       </button>
     );
   }
+
+  const activeBtnClass = themeColor === 'cyan' 
+    ? 'bg-cyan-600 text-white shadow-lg border-cyan-400'
+    : 'bg-indigo-600 text-white shadow-lg border-indigo-400';
 
   return (
     <button 
@@ -281,12 +284,12 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
       disabled={isConnecting}
       className={`group relative h-10 px-6 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
         isActive 
-          ? `bg-${themeColor}-600 text-white shadow-lg border-${themeColor}-400` 
+          ? activeBtnClass 
           : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white hover:border-slate-700'
       }`}
     >
       {isConnecting ? (
-        <div className={`w-4 h-4 border-2 border-slate-700 border-t-${themeColor}-400 rounded-full animate-spin`}></div>
+        <div className="w-4 h-4 border-2 border-slate-700 border-t-white rounded-full animate-spin"></div>
       ) : (
         <div className="flex items-center gap-3">
           <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : 'bg-slate-800'}`}></div>
