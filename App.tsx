@@ -414,17 +414,22 @@ function App() {
         </section>
       </main>
 
-      <footer className="h-20 shrink-0 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 px-8 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 font-mono z-50 overflow-hidden shadow-[0_-10px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
+      <footer className="h-24 shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 px-8 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 font-mono z-50 overflow-hidden shadow-[0_-10px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
         <div className="flex items-center gap-10">
-          <div className="flex items-center gap-3">
-            <span className={`w-2.5 h-2.5 rounded-full ${analysisState.status === 'complete' ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></span>
-            <span className="tracking-[0.2em] font-black uppercase whitespace-nowrap">{analysisState.status === 'complete' ? 'FORENSIC_LINK_READY' : 'SCANNER_CONNECTED'}</span>
+          <div className="flex items-center gap-4">
+            <span className={`w-3 h-3 rounded-full ${analysisState.status === 'complete' ? 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]'} animate-pulse`}></span>
+            <div className="flex flex-col">
+              <span className="tracking-[0.2em] font-black uppercase whitespace-nowrap text-slate-900 dark:text-slate-100">{analysisState.status === 'complete' ? 'STRATEGY_NODE_LIVE' : 'VISUAL_NODE_READY'}</span>
+              <span className="text-[8px] font-bold text-slate-400 tracking-widest">SATELLITE_LINK_UP</span>
+            </div>
           </div>
           
-          <div className="h-6 w-px bg-slate-100 dark:bg-slate-900"></div>
+          <div className="h-10 w-px bg-slate-200 dark:bg-slate-800"></div>
 
           <div className="flex items-center">
+            {/* The 'key' ensures the component resets session state when the agent type changes */}
             <LiveAssistant 
+              key={analysisState.status === 'complete' ? 'logic' : 'optic'}
               agentType={analysisState.status === 'complete' ? 'LOGIC' : 'OPTIC'}
               reportContext={analysisState.data ? JSON.stringify(analysisState.data) : 'General Field Guidance'} 
               videoStream={analysisState.status === 'complete' ? null : activeStream}
@@ -432,7 +437,7 @@ function App() {
           </div>
         </div>
         
-        <div className="text-slate-200 dark:text-slate-800 font-black tracking-[0.4em] whitespace-nowrap hidden sm:block uppercase opacity-50">©2024 ENV-SYS INTELLIGENCE SYSTEM v1.2</div>
+        <div className="text-slate-300 dark:text-slate-800 font-black tracking-[0.5em] whitespace-nowrap hidden sm:block uppercase opacity-60">ENV-SYS AQUA v1.2</div>
       </footer>
     </div>
   );

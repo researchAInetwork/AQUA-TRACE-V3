@@ -22,7 +22,15 @@ export const AQUAImpactScore: React.FC<AQUAImpactScoreProps> = ({ score, breakdo
 
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (circumference * score) / 100;
+  const safeScore = score ?? 0;
+  const offset = circumference - (circumference * safeScore) / 100;
+
+  const data = [
+    { label: 'Optical Severity', val: breakdown?.opticalSeverity ?? 0, max: 40 },
+    { label: 'Visible Area', val: breakdown?.visibleArea ?? 0, max: 20 },
+    { label: 'Ecosystem Sensitivity', val: breakdown?.ecosystemSensitivity ?? 0, max: 20 },
+    { label: 'Human Proximity Risk', val: breakdown?.humanProximity ?? 0, max: 20 },
+  ];
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row gap-6 sm:gap-8 items-center relative overflow-hidden">
@@ -48,11 +56,11 @@ export const AQUAImpactScore: React.FC<AQUAImpactScoreProps> = ({ score, breakdo
               strokeDasharray={circumference}
               style={{ strokeDashoffset: offset }}
               strokeLinecap="round"
-              className={`${getColor(score)} transition-all duration-1000 ease-out`}
+              className={`${getColor(safeScore)} transition-all duration-1000 ease-out`}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-2xl sm:text-3xl font-black ${getColor(score)} tracking-tighter`}>{score}</span>
+            <span className={`text-2xl sm:text-3xl font-black ${getColor(safeScore)} tracking-tighter`}>{safeScore}</span>
             <span className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-widest">AIS INDEX</span>
           </div>
         </div>
@@ -70,12 +78,7 @@ export const AQUAImpactScore: React.FC<AQUAImpactScoreProps> = ({ score, breakdo
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-          {[
-            { label: 'Optical Severity', val: breakdown.opticalSeverity, max: 40 },
-            { label: 'Visible Area', val: breakdown.visibleArea, max: 20 },
-            { label: 'Ecosystem Sensitivity', val: breakdown.ecosystemSensitivity, max: 20 },
-            { label: 'Human Proximity Risk', val: breakdown.humanProximity, max: 20 },
-          ].map((item, i) => (
+          {data.map((item, i) => (
             <div key={i} className="space-y-1.5">
               <div className="flex justify-between text-[8px] sm:text-[9px] uppercase font-bold tracking-tight">
                 <span className="text-slate-400">{item.label}</span>
@@ -83,8 +86,8 @@ export const AQUAImpactScore: React.FC<AQUAImpactScoreProps> = ({ score, breakdo
               </div>
               <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
                 <div 
-                  className={`h-full ${getBarColor(score)} transition-all duration-1000`} 
-                  style={{ width: `${(item.val / item.max) * 100}%` }}
+                  className={`h-full ${getBarColor(safeScore)} transition-all duration-1000`} 
+                  style={{ width: `${(item.val / (item.max || 1)) * 100}%` }}
                 />
               </div>
             </div>

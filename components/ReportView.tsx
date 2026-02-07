@@ -105,7 +105,8 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
   };
 
   const handleDownload = () => {
-    const text = `AQUA-TRACE ENVIRONMENTAL AUDIT\n\nDISCLAIMER: ${report.systemAdvisory}\n\nSUMMARY: ${report.plainLanguageSummary}\nCONFIDENCE: ${report.confidencePercentage}% (${report.confidenceLevel})\nURGENCY: ${report.timeSensitivity}\nAIS SCORE: ${report.aquaImpactScore}/100\nSEVERITY: ${report.environmentalRiskLevel}\n\nREMEDIATION STRATEGY (SUGGESTED):\n- ${report.actionIntelligence.remediationStrategy.join('\n- ')}`;
+    const remediation = report.actionIntelligence?.remediationStrategy ?? [];
+    const text = `AQUA-TRACE ENVIRONMENTAL AUDIT\n\nDISCLAIMER: ${report.systemAdvisory}\n\nSUMMARY: ${report.plainLanguageSummary}\nCONFIDENCE: ${report.confidencePercentage}% (${report.confidenceLevel})\nURGENCY: ${report.timeSensitivity}\nAIS SCORE: ${report.aquaImpactScore}/100\nSEVERITY: ${report.environmentalRiskLevel}\n\nREMEDIATION STRATEGY (SUGGESTED):\n- ${remediation.join('\n- ')}`;
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -247,7 +248,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
               <div className="p-6 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[32px] space-y-4 shadow-sm">
                  <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Confidence Drivers</h3>
                  <ul className="space-y-2">
-                   {report.confidenceFactors.map((factor, i) => (
+                   {(report.confidenceFactors ?? []).map((factor, i) => (
                      <li key={i} className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-2">
                        <span className="w-1 h-1 bg-cyan-500 rounded-full"></span>
                        {factor}
@@ -258,7 +259,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
               <div className="p-6 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[32px] space-y-4 shadow-sm">
                  <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Detection Limitations</h3>
                  <ul className="space-y-2">
-                   {report.assessmentLimitations.map((lim, i) => (
+                   {(report.assessmentLimitations ?? []).map((lim, i) => (
                      <li key={i} className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 italic">
                        <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
                        {lim}
@@ -292,8 +293,8 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/60 rounded-[32px] overflow-hidden shadow-2xl dark:shadow-none">
         <div className="bg-slate-50 dark:bg-slate-850 px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-[0.25em]">Decision Support Matrix</h3>
-          <div className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest ${report.actionIntelligence.recommendedAction === 'Escalate' ? 'bg-red-500' : 'bg-cyan-600'} text-white`}>
-            {report.actionIntelligence.recommendedAction} PROTOCOL SUGGESTED
+          <div className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest ${report.actionIntelligence?.recommendedAction === 'Escalate' ? 'bg-red-500' : 'bg-cyan-600'} text-white`}>
+            {report.actionIntelligence?.recommendedAction ?? 'REVIEW'} PROTOCOL SUGGESTED
           </div>
         </div>
         
@@ -304,7 +305,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
               <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Suggested Field Response Pathways</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {report.actionIntelligence.remediationStrategy.map((strategy, i) => (
+              {(report.actionIntelligence?.remediationStrategy ?? []).map((strategy, i) => (
                 <div key={i} className="p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl flex gap-4">
                    <span className="text-emerald-600 dark:text-emerald-500 font-mono font-bold text-xs mt-0.5">{(i+1).toString().padStart(2, '0')}</span>
                    <p className="text-[13px] text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed">{strategy}</p>
@@ -317,7 +318,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
              <div className="space-y-4">
                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Recommended Notification Targets</p>
                <div className="flex flex-wrap gap-2">
-                 {report.actionIntelligence.notificationTargets.map((target, i) => (
+                 {(report.actionIntelligence?.notificationTargets ?? []).map((target, i) => (
                    <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-600 dark:text-slate-300 font-bold rounded-lg">{target}</span>
                  ))}
                </div>
@@ -325,7 +326,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
              <div className="space-y-4">
                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Suggested Lab Evaluation</p>
                <div className="p-5 bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900/30 rounded-2xl">
-                 <p className="text-[13px] text-cyan-800 dark:text-cyan-200 font-semibold italic leading-relaxed">{report.actionIntelligence.labValidationAdvisory}</p>
+                 <p className="text-[13px] text-cyan-800 dark:text-cyan-200 font-semibold italic leading-relaxed">{report.actionIntelligence?.labValidationAdvisory ?? 'None specified'}</p>
                </div>
              </div>
           </div>
@@ -333,7 +334,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
       </div>
 
       {/* Grounding Sources Section */}
-      {sources.length > 0 && (
+      {(sources ?? []).length > 0 && (
         <div className="space-y-6 pt-10">
           <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <svg className="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -342,7 +343,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources = [], on
             <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.3em]">Intelligence Grounding</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sources.map((source, i) => (
+            {(sources ?? []).map((source, i) => (
               <a 
                 key={i} 
                 href={source.uri} 

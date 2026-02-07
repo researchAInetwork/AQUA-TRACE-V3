@@ -70,7 +70,7 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
 
   const startSession = async () => {
     if (!navigator.onLine) {
-      alert("FIELD ALERT: Network connectivity lost. Satellite uplink unavailable.");
+      alert("FIELD ALERT: Network connectivity lost. Neural link unavailable.");
       return;
     }
 
@@ -104,7 +104,6 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
             setIsActive(true);
             setIsConnecting(false);
             
-            // 1. Setup Microphone Input
             if (audioContextInRef.current) {
               const audioCtx = audioContextInRef.current;
               const source = audioCtx.createMediaStreamSource(stream);
@@ -125,7 +124,6 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
               scriptProcessor.connect(audioCtx.destination);
             }
 
-            // 2. Setup Video Telemetry (OPTIC Agent only)
             if (videoStream && agentType === 'OPTIC') {
               const v = document.createElement('video');
               v.srcObject = videoStream;
@@ -186,7 +184,7 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
           },
           onclose: () => stopSession(),
           onerror: (e) => {
-            console.error("Link Interrupted:", e);
+            console.error("Neural Bridge Error:", e);
             stopSession();
           }
         },
@@ -194,7 +192,9 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
           responseModalities: [Modality.AUDIO],
           speechConfig: { 
             voiceConfig: { 
-              voiceName: agentType === 'OPTIC' ? 'Zephyr' : 'Kore' 
+              prebuiltVoiceConfig: {
+                voiceName: agentType === 'OPTIC' ? 'Zephyr' : 'Kore'
+              }
             } 
           },
           systemInstruction: systemInstructions,
@@ -250,52 +250,61 @@ export const LiveAssistant: React.FC<LiveAssistantProps> = ({
   const themeColor = agentType === 'OPTIC' ? 'cyan' : 'indigo';
   const label = agentType === 'OPTIC' ? 'AQUA-OPTIC' : 'AQUA-LOGIC';
 
+  // Minimal mode (used in camera/scanner)
   if (isMinimal) {
     const activeClass = themeColor === 'cyan' 
-      ? 'bg-cyan-600 border-cyan-400 text-white shadow-[0_0_20px_rgba(8,145,178,0.4)]'
-      : 'bg-indigo-600 border-indigo-400 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]';
+      ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)]'
+      : 'bg-indigo-600 border-indigo-300 text-white shadow-[0_0_20px_rgba(79,70,229,0.6)]';
 
     return (
       <button 
         onClick={toggleAssistant}
         disabled={isConnecting}
-        className={`flex items-center gap-3 px-4 py-2 rounded-xl border transition-all duration-300 ${
+        className={`flex items-center gap-3 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${
           isActive 
             ? activeClass 
-            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
+            : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-cyan-500 hover:text-cyan-600'
         }`}
       >
-        <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : isConnecting ? 'bg-slate-500 animate-pulse' : 'bg-slate-800'}`}></div>
+        <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_12px_white]' : isConnecting ? 'bg-amber-500 animate-pulse' : 'bg-slate-400 dark:bg-slate-700'}`}></div>
         <div className="flex flex-col items-start leading-none gap-1">
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
-          <span className={`text-[7px] font-bold uppercase tracking-widest ${isActive ? 'text-white/80' : 'text-slate-500'}`}>{isActive ? 'LIVE LINK' : 'NEURAL CONNECT'}</span>
+          <span className={`text-[7px] font-bold uppercase tracking-[0.25em] ${isActive ? 'text-white/95' : 'text-slate-500'}`}>{isActive ? 'LIVE LINK' : 'READY'}</span>
         </div>
       </button>
     );
   }
 
+  // Footer / Main Hub mode
   const activeBtnClass = themeColor === 'cyan' 
-    ? 'bg-cyan-600 text-white shadow-lg border-cyan-400'
-    : 'bg-indigo-600 text-white shadow-lg border-indigo-400';
+    ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_40px_rgba(6,182,212,0.7)]'
+    : 'bg-indigo-600 border-indigo-300 text-white shadow-[0_0_40px_rgba(79,70,229,0.7)]';
+
+  const standbyClass = 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-cyan-500 dark:hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-850';
 
   return (
     <button 
       onClick={toggleAssistant}
       disabled={isConnecting}
-      className={`group relative h-10 px-6 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
-        isActive 
-          ? activeBtnClass 
-          : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white hover:border-slate-700'
+      className={`group relative h-14 px-8 rounded-2xl flex items-center gap-5 transition-all duration-300 border-2 font-mono shadow-lg active:scale-95 ${
+        isActive ? activeBtnClass : standbyClass
       }`}
     >
       {isConnecting ? (
-        <div className="w-4 h-4 border-2 border-slate-700 border-t-white rounded-full animate-spin"></div>
+        <div className="flex items-center gap-4">
+           <div className="w-5 h-5 border-[3px] border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+           <span className="text-[11px] font-black tracking-widest uppercase text-cyan-600 dark:text-cyan-400">CONNECTING LINK...</span>
+        </div>
       ) : (
-        <div className="flex items-center gap-3">
-          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-white shadow-[0_0_10px_white]' : 'bg-slate-800'}`}></div>
+        <div className="flex items-center gap-5">
+          <div className={`w-4 h-4 rounded-full relative ${isActive ? 'bg-white shadow-[0_0_20px_white]' : 'bg-slate-400 dark:bg-slate-700'}`}>
+             {isActive && <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-40"></div>}
+          </div>
           <div className="flex flex-col items-start leading-none">
-            <span className="text-[9px] font-black uppercase tracking-[0.25em]">{label}</span>
-            <span className={`text-[7px] font-mono uppercase tracking-widest ${isActive ? 'text-white/70' : 'text-slate-600'}`}>{isActive ? 'Active Telemetry' : 'Standby'}</span>
+            <span className="text-[12px] font-black uppercase tracking-[0.4em]">{label}</span>
+            <span className={`text-[9px] font-bold uppercase tracking-[0.5em] mt-1.5 ${isActive ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'}`}>
+              {isActive ? 'TELEMETRY_STREAMING' : 'SYS_READY_STB'}
+            </span>
           </div>
         </div>
       )}
