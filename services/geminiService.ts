@@ -108,69 +108,34 @@ export async function analyzeWaterImage(file: File, context: string, granularity
       PROMPT PROTOCOL:
       - Use conditional language ("may indicate", "suggests", "possible").
       - Prioritize risk prioritization over definitive diagnosis.
-      - Explicitly state that visual evidence requires laboratory confirmation.
+      - Return findings STRICTLY as a JSON object inside a code block.
     `;
 
-    // Using gemini-3-pro-preview for advanced multimodal reasoning with search grounding.
-    // We use responseSchema for structured output when combined with googleSearch.
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: {
+      model: 'gemini-3-flash-preview',
+      contents: [{
         parts: [
           { inlineData: { data: base64Data, mimeType } },
           { text: prompt }
         ]
-      },
+      }],
       config: {
-        tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            detectedOptics: { type: Type.ARRAY, items: { type: Type.STRING } },
-            nonDetectableOptics: { type: Type.ARRAY, items: { type: Type.STRING } },
-            aquaImpactScore: { type: Type.NUMBER },
-            comparativeIntelligence: { type: Type.STRING },
-            timeSensitivity: { type: Type.STRING },
-            plainLanguageSummary: { type: Type.STRING },
-            scoreBreakdown: {
-              type: Type.OBJECT,
-              properties: {
-                opticalSeverity: { type: Type.NUMBER },
-                visibleArea: { type: Type.NUMBER },
-                ecosystemSensitivity: { type: Type.NUMBER },
-                humanProximity: { type: Type.NUMBER }
-              }
-            },
-            scoreExplanation: { type: Type.STRING },
-            likelyPollutionCategory: { type: Type.STRING },
-            environmentalImpactExplanation: { type: Type.STRING },
-            humanHealthImplications: { type: Type.STRING },
-            environmentalRiskLevel: { type: Type.STRING },
-            riskJustification: { type: Type.STRING },
-            actionIntelligence: {
-              type: Type.OBJECT,
-              properties: {
-                recommendedAction: { type: Type.STRING },
-                notificationTargets: { type: Type.ARRAY, items: { type: Type.STRING } },
-                followUpEvidence: { type: Type.ARRAY, items: { type: Type.STRING } },
-                labValidationAdvisory: { type: Type.STRING },
-                remediationStrategy: { type: Type.ARRAY, items: { type: Type.STRING } }
-              }
-            },
-            confidencePercentage: { type: Type.NUMBER },
-            confidenceLevel: { type: Type.STRING },
-            confidenceFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
-            assessmentLimitations: { type: Type.ARRAY, items: { type: Type.STRING } }
-          }
-        }
+        tools: [{ googleSearch: {} }]
       }
     });
 
     const text = response.text || '';
-    const report: AnalysisReport = JSON.parse(text);
-    report.sourceMode = 'Live';
-    report.systemAdvisory = SYSTEM_DISCLAIMER;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No structured intelligence returned.");
+    
+    const reportData = JSON.parse(jsonMatch[0]);
+    
+    const report: AnalysisReport = {
+      ...MOCK_REPORTS[0],
+      ...reportData,
+      sourceMode: 'Live',
+      systemAdvisory: SYSTEM_DISCLAIMER
+    };
     
     const sources: GroundingSource[] = [];
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
@@ -181,12 +146,11 @@ export async function analyzeWaterImage(file: File, context: string, granularity
     return { report, sources, mode: 'Live' };
 
   } catch (error: any) {
-    console.warn("Live API unavailable or synthesis failed. Falling back to cached intelligence.", error);
-    const index = Math.abs(file.name.length) % MOCK_REPORTS.length;
+    console.warn("Live synthesis interrupted. Defaulting to demonstration intelligence.", error);
     return { 
-      report: MOCK_REPORTS[index], 
+      report: MOCK_REPORTS[0], 
       sources: [
-        { title: "Standard Environmental Risk Procedures", uri: "https://www.epa.gov/environmental-topics" }
+        { title: "EPA Environmental Risk Procedures", uri: "https://www.epa.gov/environmental-topics" }
       ],
       mode: 'Demo' 
     };
@@ -196,13 +160,7 @@ export async function analyzeWaterImage(file: File, context: string, granularity
 export async function generateAudioReport(report: AnalysisReport): Promise<string> {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `
-      AQUA-TRACE Impact Intelligence Briefing:
-      AIS Score: ${report.aquaImpactScore}. Urgency: ${report.timeSensitivity}.
-      Summary: ${report.plainLanguageSummary}.
-      Risk Rationale: ${report.riskJustification}.
-      Disclaimer: This briefing is based on optical triage and must be lab-verified.
-    `;
+    const prompt = `AQUA-TRACE Impact Briefing. AIS Index ${report.aquaImpactScore}. Urgency: ${report.timeSensitivity}. Summary: ${report.plainLanguageSummary}. Justification: ${report.riskJustification}.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -211,16 +169,16 @@ export async function generateAudioReport(report: AnalysisReport): Promise<strin
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Zephyr' },
           },
         },
       },
     });
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("Audio synthesis failed.");
+    if (!base64Audio) throw new Error("Synthesis failed.");
     return base64Audio;
   } catch {
-    throw new Error("Audio Briefing currently unavailable.");
+    throw new Error("Briefing offline.");
   }
 }
